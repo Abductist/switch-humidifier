@@ -90,11 +90,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
   return True
 
 class SwitchHumidifier(HumidifierEntity):
-	
+
   def __init__(self, name, sensor_id, switch_id, device_class, start_delta, stop_delta):
     """Initialize the humidifier."""
     self._sensor_id = sensor_id
-    self._switch_id = switch_id  
+    self._switch_id = switch_id
 
     self._humidity = DEFAULT_HUMIDITY
 
@@ -110,8 +110,10 @@ class SwitchHumidifier(HumidifierEntity):
 
     # To cheack if the switch state change if fired by the platform
     self._self_changed_switch = False
-    
+
     self._name = name
+
+    self._unique_id = self._name.lower().replace(' ', '_')
 
     # Persistence file to store persistent data
     self._persistence_final_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "persistence.json")
@@ -130,12 +132,12 @@ class SwitchHumidifier(HumidifierEntity):
       _LOGGER.error("Error occured loading: %s", str(e))
       self._target_humidity = DEFAULT_HUMIDITY
 
-  def save_target(self): 
+  def save_target(self):
     """set target humidity to persistent JSON and store it."""
     self._persistence_json['target'] = self._target_humidity
     self.persistence_save()
 
-  def persistence_save(self): 
+  def persistence_save(self):
     """Store persistent JSON as file."""
     if self._persistence_json is not None: #Check we have something to save
       try:
@@ -146,7 +148,21 @@ class SwitchHumidifier(HumidifierEntity):
 
   def update(self):
     """Update called periodically"""
-    self._update_switch() 
+    self._update_switch()
+
+  @property
+  def unique_id(self):
+      """Return a unique ID."""
+      return self._unique_id
+
+  @property
+  def extra_state_attributes(self):
+    """Return the device state attributes."""
+    attrs = {
+      'friendly_name': self._name,
+      'unique_id': self._unique_id,
+    }
+    return attrs
 
   @property
   def name(self):
@@ -167,7 +183,7 @@ class SwitchHumidifier(HumidifierEntity):
   def max_humidity(self):
     """Return the target humidity."""
     return MAX_HUMIDITY
-      
+
   # def supported_features(self):
   #   """Return the list of supported features."""
   #   return (SUPPORT_MODES)
@@ -224,7 +240,7 @@ class SwitchHumidifier(HumidifierEntity):
             self._is_on = new_is_on
             # Update state of entity
             self.async_write_ha_state()
-            self._update_switch() 
+            self._update_switch()
 
   def _update_switch(self):
     """Manage switch based on the state."""
