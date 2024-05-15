@@ -12,9 +12,8 @@ from homeassistant.components.humidifier import (
   ATTR_HUMIDITY,
   ATTR_MAX_HUMIDITY,
   ATTR_MIN_HUMIDITY,
-  DEVICE_CLASS_DEHUMIDIFIER,
-  DEVICE_CLASS_HUMIDIFIER,
-  SUPPORT_MODES,
+  HumidifierDeviceClass,
+  HumidifierEntityFeature,
   PLATFORM_SCHEMA,
   HumidifierEntity,
 )
@@ -74,9 +73,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
   name = config[CONF_NAME]
   sensor_id = config[CONF_SENSOR_ID]
   switch_id = config[CONF_SWITCH_ID]
-  device_class = DEVICE_CLASS_DEHUMIDIFIER
+  device_class = HumidifierDeviceClass.DEHUMIDIFIER
   if config[CONF_TYPE] == HUMIDIFIER_TYPE:
-    device_class = DEVICE_CLASS_HUMIDIFIER
+    device_class = HumidifierDeviceClass.HUMIDIFIER
   start_delta = config[CONF_START_DELTA]
   stop_delta = config[CONF_STOP_DELTA]
   devices = []
@@ -186,7 +185,7 @@ class SwitchHumidifier(HumidifierEntity):
 
   # def supported_features(self):
   #   """Return the list of supported features."""
-  #   return (SUPPORT_MODES)
+  #   return (HumidifierEntityFeature.MODES)
 
   @property
   def is_on(self):
@@ -221,7 +220,7 @@ class SwitchHumidifier(HumidifierEntity):
 
   def _state_changed(self, entity_id, old_state, new_state):
     """Called on sensor or switch state change"""
-    if not new_state is None and not new_state.state == 'unknown' and not new_state.state == 'unavailable' and not old_state.state == new_state.state:
+    if not new_state is None and not new_state.state == 'unknown' and not new_state.state == 'unavailable' and (old_state is None or not old_state.state == new_state.state):
       # Check if they are different states
       if entity_id == self._sensor_id:
         # Update humidity value
@@ -246,12 +245,12 @@ class SwitchHumidifier(HumidifierEntity):
     """Manage switch based on the state."""
     if self._is_on == True:
       # Platform is on, check humidity
-      if self.device_class == DEVICE_CLASS_DEHUMIDIFIER:
+      if self.device_class == HumidifierDeviceClass.DEHUMIDIFIER:
         if self._switch_state == STATE_ON and self._humidity < self._target_humidity - self._stop_delta:
           self._turn_switch_off()
         elif self._switch_state == STATE_OFF and self._humidity > (self._target_humidity + self._start_delta):
           self._turn_switch_on()
-      elif self.device_class == DEVICE_CLASS_HUMIDIFIER:
+      elif self.device_class == HumidifierDeviceClass.HUMIDIFIER:
         if self._switch_state == STATE_ON and self._humidity > (self._target_humidity + self._stop_delta):
           self._turn_switch_off()
         elif self._switch_state == STATE_OFF and self._humidity < (self._target_humidity - self._start_delta):
